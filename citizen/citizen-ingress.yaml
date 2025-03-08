@@ -1,0 +1,42 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: citizen-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: citizen.local
+    http:
+      paths:
+      # Civil-events-service routes
+      - path: /api/marriages(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: civil-events-service
+            port:
+              number: 8080
+      - path: /births(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: civil-events-service
+            port:
+              number: 8080
+      - path: /divorces(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: civil-events-service
+            port:
+              number: 8080
+      # Citizen-service routes
+      - path: /citizens(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: citizen-service
+            port:
+              number: 8080

@@ -1,0 +1,33 @@
+# citizen-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: citizen-deployment
+  labels:
+    app: citizen
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: citizen
+  template:
+    metadata:
+      labels:
+        app: citizen
+    spec:
+      containers:
+      - name: citizen-container
+        image: raoufrazi/citizen-service:v1
+        ports:
+        - containerPort: 8081
+        env:
+        - name: SERVER_PORT
+          value: "8081"
+        - name: SPRING_DATASOURCE_URL
+          value: "jdbc:postgresql://postgres-service:5432/****"  
+        - name: SPRING_DATASOURCE_USERNAME
+          value: "****"
+        - name: SPRING_DATASOURCE_PASSWORD
+          value: ""
+        - name: SPRING_JPA_HIBERNATE_DDL-AUTO
+          value: "update"

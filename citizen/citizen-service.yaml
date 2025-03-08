@@ -1,0 +1,13 @@
+# citizen-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: citizen-service
+spec:
+  selector:
+    app: citizen
+  ports:
+    - protocol: TCP
+      port: 8080    # External service port (unchanged)
+      targetPort: 8081  # Must match the containerPort (now 8081)
+  type: NodePort
