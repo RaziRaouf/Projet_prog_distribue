@@ -1,9 +1,0 @@
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  namespace: default
-  name: civil-events-role
-rules:
-- apiGroups: [""]
-  resources: ["configmaps", "services"]
-  verbs: ["get", "list"]
