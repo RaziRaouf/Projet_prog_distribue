@@ -40,6 +40,7 @@ Ce projet déploie deux microservices interconnectés pour la gestion des citoye
 |   Service      <--------+   Service          <--------+   (ClusterIP)     |
 |   (NodePort)   |        |   (ClusterIP)      |  JDBC  |                   |
 +----------------+        +--------------------+        +-------------------+
+```
 ### Composants clés :
 - **Citizen Service** : API REST sur le port 8081 (/citizens/*).
 - **Civil Events Service** : Routes /marriages, /births, /divorces (port 8080).
