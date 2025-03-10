@@ -1,0 +1,66 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: citizen-ingress-secure
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/waf-mode: "DROP"  
+    nginx.ingress.kubernetes.io/limit-rpm: "100"  
+spec:
+  tls:
+  - hosts:
+    - citizen.local
+    secretName: citizen-tls
+  ingressClassName: nginx
+  rules:
+  - host: citizen.local
+    http:
+      paths:
+      
+      - path: /marriages(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: civil-events-service
+            port:
+              number: 8080
+        
+        auth: 
+          type: basic
+          secret: basic-auth-secret  
+
+      - path: /births(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: civil-events-service
+            port:
+              number: 8080
+
+      - path: /divorces(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: civil-events-service
+            port:
+              number: 8080
+
+      
+      - path: /citizens(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: citizen-service
+            port:
+              number: 8080
+        cors:
+          allowOrigins:
+          - https://*.citizen.local
+          allowMethods:
+          - GET
+          - POST
+          allowHeaders:
+          - Authorization
+          - Content-Type
