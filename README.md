@@ -1,5 +1,6 @@
 # Projet de Gestion Civique  
-*Microservices Kubernetes avec Spring Boot, PostgreSQL et Sécurité Avancée*  
+
+**Microservices Kubernetes avec Spring Boot, PostgreSQL, Docker et Sécurité Avancée**  
 
 ---
 
@@ -9,18 +10,22 @@
 - [Fonctionnalités](#fonctionnalités)  
 - [Installation](#installation)  
 - [Configuration](#configuration)  
-- [Sécurité](#sécurité)  
+- [Base de Données PostgreSQL](#base-de-données-postgresql)  
+- [Ingress Gateway](#ingress-gateway)  
+- [Sécurisation Avancée](#sécurisation-avancée)  
+- [Dockerisation](#dockerisation)  
 - [Commandes Utiles](#commandes-utiles)  
 - [Dépannage](#dépannage)  
+- [Références](#références)  
 
 ---
 
 ## 🌟 Aperçu  
-Ce projet déploie deux microservices interconnectés pour la gestion des citoyens et des événements civils (mariages, naissances, divorces) sur Kubernetes.  
+Ce projet déploie un **système de gestion civique** avec des **microservices** pour la gestion des citoyens et des événements civils (mariages, naissances, divorces) dans un environnement **Kubernetes** sécurisé.
 
-**Services principaux** :  
+### **Services principaux** :  
 - 🧑💻 **Citizen Service** : Gestion CRUD des citoyens (Spring Boot + PostgreSQL).  
-- 📅 **Civil Events Service** : Orchestration des événements civils avec communication inter-services (Feign Client).  
+- 📅 **Civil Events Service** : Gestion des événements civils (Feign Client pour la communication inter-services).  
 - 🔒 **Sécurité** : RBAC, TLS, Network Policies, Secrets chiffrés.  
 
 ---
@@ -41,97 +46,100 @@ Ce projet déploie deux microservices interconnectés pour la gestion des citoye
 |   (NodePort)   |        |   (ClusterIP)      |  JDBC  |                   |
 +----------------+        +--------------------+        +-------------------+
 ```
-### Composants clés :
-- **Citizen Service** : API REST sur le port 8081 (/citizens/*).
-- **Civil Events Service** : Routes /marriages, /births, /divorces (port 8080).
-- **PostgreSQL** : Base de données avec migrations Hibernate.
-- **Ingress** : Routage TLS avec annotations de sécurité.
 
+### **Composants clés** :  
+- **Citizen Service** : API REST sur le port 8081 (/citizens/*).  
+- **Civil Events Service** : Routes /marriages, /births, /divorces (port 8080).  
+- **PostgreSQL** : Base de données avec migrations Hibernate.  
+- **Ingress** : Routage TLS avec annotations de sécurité.  
 
-## 🚀 Fonctionnalités
+---
 
-### Métier
+## 🚀 Fonctionnalités  
+
+### **Métier**  
 
 | Service        | Endpoints                 | Description                         |
-|----------------|---------------------------|-------------------------------------|
+|---------------|---------------------------|-------------------------------------|
 | **Citizen**    | GET /citizens              | Liste tous les citoyens             |
-|                | POST /citizens             | Crée un nouveau citoyen             |
-|                | PUT /citizens/{id}         | Met à jour un citoyen               |
-| **Civil Events**| POST /marriages            | Enregistre un mariage               |
-|                | POST /divorces             | Gère un divorce                     |
-|                | POST /births               | Enregistre une naissance            |
+|               | POST /citizens             | Crée un nouveau citoyen             |
+|               | PUT /citizens/{id}         | Met à jour un citoyen               |
+| **Civil Events**| POST /marriages          | Enregistre un mariage               |
+|               | POST /divorces             | Gère un divorce                     |
+|               | POST /births               | Enregistre une naissance            |
 
-### Technique
+---
 
-- 🔄 **Communication inter-services** via Feign Client.
-- 📊 **Base de données PostgreSQL** avec chiffrement ETCD.
-- 🔐 **Sécurité** : RBAC et Network Policies.
+## 🔧 Installation  
 
+### **Prérequis**  
+- Minikube v1.25+  
+- kubectl v1.24+  
+- Helm v3.8+  
 
-## 🔧 Installation
+### **Étapes** :  
 
-### Prérequis
-- Minikube v1.25+
-- kubectl v1.24+
-- Helm v3.8+
-
-### Étapes :
-
-1. **Démarrer Minikube** :
+1. **Démarrer Minikube** :  
     ```bash
     minikube start --driver=docker --memory=4096  
     minikube addons enable ingress  
     ```
 
-2. **Déployer les composants** :
+2. **Déployer les composants** :  
     ```bash
     kubectl apply -f postgres-deployment.yaml  
     kubectl apply -f citizen-deployment.yaml  
     kubectl apply -f civil-events-deployment.yaml  
     ```
 
-3. **Appliquer la sécurité** :
+3. **Activer l'Ingress** :  
     ```bash
-    kubectl apply -f k8s-security/secrets/  
-    kubectl apply -f k8s-security/network-policies/  
-    ```
-
-4. **Activer l'Ingress** :
-    ```bash
-    kubectl apply -f citizen-ingress-secure.yaml  
-    ```
-
-## ⚙ Configuration
-
-### Fichiers critiques :
-
-- **Secrets PostgreSQL** (k8s-security/secrets/postgres-secret.yaml) :
-    ```yaml
-    data:  
-      POSTGRES_USER: "<base64>"  
-      POSTGRES_PASSWORD: "<base64>"
-    ```
-
-- **RBAC** (k8s-security/rbac/citizen-role.yaml) :
-    ```yaml
-    - apiGroups: [""]  
-      resources: ["pods", "services"]  
-      verbs: ["get", "list"]
-    ```
-
-- **Network Policy** (k8s-security/network-policies/postgres-policy.yaml) :
-    ```yaml
-    - from:  
-      - podSelector:  
-          matchLabels:  
-            app: citizen
+    kubectl apply -f ingress.yaml  
     ```
 
 ---
 
-## 🔐 Sécurité
+## 🗄 Base de Données PostgreSQL  
+- Stocke toutes les données des citoyens et événements.  
+- Déploiement avec **StatefulSet** pour la persistance.  
+- Sauvegarde et chiffrement des **credentials** avec **Kubernetes Secrets**.  
 
-### Mesures implémentées :
+**Exemple de Secret PostgreSQL** :  
+```yaml
+data:
+  POSTGRES_USER: "<base64>"
+  POSTGRES_PASSWORD: "<base64>"
+```
+
+---
+
+## 🌐 Ingress Gateway  
+
+L'**Ingress Controller** (Nginx) sécurise l'accès aux services et applique TLS :  
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-citizen-service
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - host: citizens.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: citizen-service
+            port:
+              number: 8081
+```
+
+---
+
+## 🔐 Sécurisation Avancée  
 
 | Composant       | Outil/Technologie         | Description                         |
 |-----------------|---------------------------|-------------------------------------|
@@ -142,40 +150,46 @@ Ce projet déploie deux microservices interconnectés pour la gestion des citoye
 
 ---
 
-## 🛠 Commandes utiles
+## 📦 Dockerisation  
 
-### Gestion du cluster :
-- Vérifier les certificats TLS :
+Chaque service est conteneurisé avec Docker :  
+
+**Exemple de Dockerfile** :  
+```dockerfile
+FROM openjdk:17
+COPY target/citizen-service.jar app.jar
+ENTRYPOINT ["java", "-jar", "app.jar"]
+```
+
+**Build & Push** :  
+```bash
+docker build -t myrepo/citizen-service .
+docker push myrepo/citizen-service
+```
+
+---
+
+## 🔍 Commandes Utiles  
+
+- **Lister les pods** :  
     ```bash
-    kubectl get certificates  
+    kubectl get pods
     ```
-
-- Accéder aux logs d'un service :
+- **Vérifier les logs d'un service** :  
     ```bash
-    kubectl logs -f deployment/civil-events-service  
+    kubectl logs -f deployment/civil-events-service
     ```
-
-- Redémarrer un déploiement :
+- **Redémarrer un déploiement** :  
     ```bash
-    kubectl rollout restart deployment/citizen-deployment  
-    ```
-
-### Sécurité :
-- Générer un secret PostgreSQL :
-    ```bash
-    kubectl create secret generic postgres-secrets \  
-      --from-literal=POSTGRES_USER=admin \  
-      --from-literal=POSTGRES_PASSWORD=$(openssl rand -base64 16)  
+    kubectl rollout restart deployment/citizen-deployment
     ```
 
 ---
 
-## 🚨 Dépannage
-
-### Problèmes courants :
+## 🚨 Dépannage  
 
 | Symptôme                      | Solution                               |
-|-------------------------------|----------------------------------------|
+|--------------------------------|----------------------------------------|
 | **Erreur 503 sur l'Ingress**   | Vérifier les endpoints : `kubectl get endpoints` |
 | **PostgreSQL inaccessible**    | Vérifier les Network Policies         |
 | **Certificats non générés**    | Inspecter Cert-Manager : `kubectl describe clusterissuer` |
@@ -185,9 +199,8 @@ Ce projet déploie deux microservices interconnectés pour la gestion des citoye
 ## 📚 Références  
 - [Documentation Kubernetes](https://kubernetes.io/docs/)  
 - [Best Practices Sécurité](https://kubernetes.io/docs/best-practices/)  
-- [Cert-Manager](https://cert-manager.io/docs/)
+- [Cert-Manager](https://cert-manager.io/docs/)  
 
 ---
 
 **Contact** : mohamedraoufrazi@gmail.com | [Repo GitHub](https://github.com/RaziRaouf/Projet_prog_distribue)
-
